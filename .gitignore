@@ -1,9 +1,32 @@
+# Compiler stuff (! implies excluding)
 **/Make/*
 !**/Make/files
 !**/Make/options
 
+# Extra modules
+excludedModels
+uqBkp
+
+# QTcreator (IDE) related
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
+
+# Log files
+log*
+
+# Include files
 lnInclude
 
+# Tmp files
 .*.swp
 
-
+# Keep untracked
+gPCpimpleTurbFoam
+gPCpimpleTurbFoamv1806_UQnut
+pimpleTurbFoamv1806
+funcObj
+platforms
+swak4Foam
