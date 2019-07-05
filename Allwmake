@@ -1,0 +1,3 @@
+(cd src; ./Allwmake)
+(cd applications/utilities; wmake -all)
+(cd applications/solvers/gPCpimpleTurbFoamv1806; ./Allwmake)

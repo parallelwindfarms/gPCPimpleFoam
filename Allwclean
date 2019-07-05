@@ -1,0 +1,3 @@
+(cd src; ./Allwclean)
+(cd applications/utilities; wclean -all)
+(cd applications/solvers/gPCpimpleTurbFoamv1806; ./Allwclean)
