@@ -1,0 +1,14 @@
+uqturbulenceModel.C
+
+/* LES delta functions */
+LESdelta = LES/LESdeltas
+$(LESdelta)/LESdelta/uqLESdelta.C
+$(LESdelta)/cubeRootVolDelta/uqcubeRootVolDelta.C
+$(LESdelta)/vanDriestDelta/uqvanDriestDelta.C
+
+/* Wall function BCs */
+wallFunctions = derivedFvPatchFields/wallFunctions
+nutWallFunctions = $(wallFunctions)/nutWallFunctions
+$(nutWallFunctions)/nutkWallFunction/uqnutkWallFunctionFvPatchScalarField.C
+
+LIB = $(FOAM_USER_LIBBIN)/libuqturbulenceModels

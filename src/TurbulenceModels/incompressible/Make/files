@@ -1,0 +1,4 @@
+uqincompressibleTurbulenceModel.C
+turbulentTransportModels/uqturbulentTransportModels.C
+
+LIB = $(FOAM_USER_LIBBIN)/libuqincompressibleTurbulenceModels

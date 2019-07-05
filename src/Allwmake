@@ -1,0 +1,3 @@
+(cd transportModels/incompressible; wmake)
+(cd TurbulenceModels; ./Allwmake)
+

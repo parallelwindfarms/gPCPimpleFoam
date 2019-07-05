@@ -1,0 +1,8 @@
+viscosityModels/viscosityModel/uqviscosityModel.C
+viscosityModels/viscosityModel/uqviscosityModelNew.C
+viscosityModels/Newtonian/uqNewtonian.C
+
+transportModel/uqtransportModel.C
+singlePhaseTransportModel/uqsinglePhaseTransportModel.C
+
+LIB = $(FOAM_USER_LIBBIN)/libuqincompressibleTransportModels
