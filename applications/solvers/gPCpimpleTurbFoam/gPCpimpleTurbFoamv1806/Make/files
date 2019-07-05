@@ -1,3 +1,0 @@
-gPCpimpleFoamv1806.C
-
-EXE = $(FOAM_USER_APPBIN)/gPCpimpleFoamv1806
