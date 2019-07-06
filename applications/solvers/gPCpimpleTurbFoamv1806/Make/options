@@ -1,5 +1,9 @@
 UQ_SRC = ../../../src
 UQ_INC = ../../../uqIncludes
+<<<<<<< HEAD
+=======
+
+>>>>>>> 80821ae31eef59896ea693355840b20fc9557dee
 
 EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
