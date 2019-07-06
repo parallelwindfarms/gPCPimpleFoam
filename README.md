@@ -1,2 +1,2 @@
-# Generalized Polynomial Chaos (gPC) using pimpleFoam
+# Generalized Polynomial Chaos (gPC) for CFD using pimpleFoam
 
