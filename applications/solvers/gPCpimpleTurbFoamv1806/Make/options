@@ -1,4 +1,6 @@
 UQ_SRC = ../../../src
+UQ_INC = ../../../uqIncludes
+
 
 EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
@@ -9,7 +11,7 @@ EXE_INC = \
     -I$(UQ_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
     -I$(UQ_SRC)/TurbulenceModels/incompressible/lnInclude \
     -I$(UQ_SRC)/transportModels/incompressible/lnInclude \
-    -I$(UQ_SRC)/headers
+    -I$(UQ_INC)/
 
 EXE_LIBS = \
     -lfiniteVolume \
