@@ -1,3 +1,10 @@
+echo $'\n-- Compiling src - turbulence and transport models ---\n'
 (cd src; ./Allwmake)
+
+echo $'\n-- Compiling utilities ---\n'
 (cd applications/utilities; wmake -all)
+
+echo $'\n-- Compiling solvers ---\n'
 (cd applications/solvers/gPCpimpleTurbFoamv1806; ./Allwmake)
+
+echo $'\nDONE.\n'
