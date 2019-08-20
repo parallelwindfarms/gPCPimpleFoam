@@ -1,5 +1,6 @@
 // --- Calculate nuEff for UQ
 
+scalar              tmpCijklm   (0.0);
 volScalarField      uqNut_i     (turbulence[0]->nut() * 0.0);
 
 volSymmTensorField  Di          (symm(fvc::grad(U[i])));
@@ -11,72 +12,63 @@ if ( FS )
 {
     forAll(U, l)
     {
-        Cijkl    = M4[i][j][k][l];
-        uqNut_i += Cijkl
-                 * turbulence[i]->getCs()*turbulence[l]->getCs()
-                 * delta2S;
+        forAll(U, m)
+        {
+            if ( (truncated && (i+j+P-k+l+m <= 4*P)) || (truncated != 1) )
+            {
+                tmpCijklm = M5[i][j][P-k][l][m];
+                if ( tmpCijklm != 0 )
+                {
+                    uqNut_i += tmpCijklm
+                             * turbulence[i]->getCs()*turbulence[l]->getCs()
+                             * delta2*S[m];
+                }
+            }
+
+        }
+
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if ( PS )
+/*
+else if ( PS1 )
 {
-    uqNut_i = Cijk * turbulence[i]->nut();
+    forAll(U, l)
+    {
+        forAll(U, m)
+        {
+            forAll(U, n)
+            {
+                tmpCijk = M4[l][m][n][i];
+                if ( tmpCijk != 0 )
+                {
+                    uqNut_i += tmpCijk
+                             * turbulence[l]->getCs()*turbulence[m]->getCs()
+                             * delta2*S[n];
+                }
+            }
+        }
+    }
+    uqNut_i *= 1/M1[i];
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+else if ( PS2 )
+{
+    forAll(U, l)
+    {
+        forAll(U, m)
+        {
+            tmpCijk = M3[l][m][i];
+            if ( tmpCijk != 0 )
+            {
+                uqNut_i += tmpCijk
+                         * turbulence[l]->getCs()*turbulence[l]->getCs()
+                         * delta2*S[m];
+            }
+        }
+    }
+    uqNut_i *= 1/M1[i];
+}
+*/
 
 
 

@@ -28,6 +28,8 @@ Description
     Calculates and outputs the mean and maximum Courant Numbers.
 
 \*---------------------------------------------------------------------------*/
+#ifndef U0CourantNo_H
+#define U0CourantNo_H
 
 scalar CoNum = 0.0;
 scalar meanCoNum = 0.0;
@@ -44,7 +46,30 @@ scalar meanCoNum = 0.0;
         0.5*(gSum(sumPhi)/gSum(mesh.V().field()))*runTime.deltaTValue();
 }
 
-Info<< "Courant Number mean: " << meanCoNum
+Info<< "U0 based Courant Number mean: " << meanCoNum
     << " max: " << CoNum << endl;
+
+
+// Setting number of Explicit Cycles
+label expItr(0);
+label expItrMax(runTime.controlDict().lookupOrDefault<label>("expItrMax",P+1));
+
+#endif
+
+{
+    scalarField sumPhi
+    (
+        fvc::surfaceSum(mag(phi[0]))().primitiveField()
+    );
+
+    CoNum = 0.5*gMax(sumPhi/mesh.V().field())*runTime.deltaTValue();
+
+    meanCoNum =
+        0.5*(gSum(sumPhi)/gSum(mesh.V().field()))*runTime.deltaTValue();
+}
+
+// Setting number of Explicit Cycles
+expItr = 0;
+expItrMax = runTime.controlDict().lookupOrDefault<label>("expItrMax",P+1);
 
 // ************************************************************************* //

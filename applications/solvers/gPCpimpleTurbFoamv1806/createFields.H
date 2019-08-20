@@ -114,7 +114,6 @@ forAll(phi, k)
     ));
 }
 
-
 label pRefCell = 0;
 scalar pRefValue = 0.0;
 
@@ -177,7 +176,7 @@ forAll(p, k)
 // UQ mean, st.dev. and their ModEff initialization (for postProcessing)
 
 // Sigma -> Mean -> Prime2Mean
-
+/*
 Info<< "\n--Creating pSigma field pSigma\n" << endl;
 
 volScalarField pSigma
@@ -222,7 +221,7 @@ volVectorField USigma
     ),
     U[1]*0.0
 );
-
+*/
 // Mean -> Sigma, Prime2Mean -> Sigma
 PtrList<volScalarField> pMean(P+1);
 Info<< "\n--Reading field p[k]Mean\n" << endl;
@@ -235,14 +234,14 @@ forAll(pMean, k)
             "pMean" + std::to_string(k),
             runTime.timeName(),
             mesh,
-            IOobject::NO_READ,
+            IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
         ),
         p[k]*0.0
     ));
 }
 
-Info<< "\n--Creating pMeanSigma field pMeanSigma\n" << endl;
+Info<< "\n--Creating field pMeanSigma\n" << endl;
 volScalarField pMeanSigma
 (
     IOobject
@@ -250,7 +249,7 @@ volScalarField pMeanSigma
         "pMeanSigma",
         runTime.timeName(),
         mesh,
-        IOobject::NO_READ,
+        IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
     p[1]*0.0
@@ -267,14 +266,14 @@ forAll(UMean, k)
             "UMean" + std::to_string(k),
             runTime.timeName(),
             mesh,
-            IOobject::NO_READ,
+            IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
         ),
         U[k]*0.0
     ));
 }
 
-Info<< "\n--Creating UMeanSigma field UMeanSigma\n" << endl;
+Info<< "\n--Creating field UMeanSigma\n" << endl;
 volVectorField UMeanSigma
 (
     IOobject
@@ -282,12 +281,46 @@ volVectorField UMeanSigma
         "UMeanSigma",
         runTime.timeName(),
         mesh,
-        IOobject::NO_READ,
+        IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
     U[1]*0.0
 );
 
+PtrList<volSymmTensorField> RMean(P+1);
+Info<< "\n--Creating field RMean[k]\n" << endl;
+forAll(RMean, k)
+{
+    RMean.set(k,new volSymmTensorField
+    (
+        IOobject
+        (
+            "RMean" + std::to_string(k),
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        symm(U[0]*U[0])*0.0
+    ));
+}
+
+Info<< "\n--Creating field RMeanSigma\n" << endl;
+volSymmTensorField RMeanSigma
+(
+    IOobject
+    (
+        "RMeanSigma",
+        runTime.timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    symm(U[0]*U[0])*0.0
+);
+
+
+/*
 Info<< "\n--Creating UMeanSigmaMean field UMeanSigmaMean\n" << endl;
 volVectorField UMeanSigmaMean
 (
@@ -329,38 +362,80 @@ volSymmTensorField UMeanSigmaPrime2Mean
     ),
     symm(UMeanSigma*UMeanSigma)
 );
+*/
 
-PtrList<volSymmTensorField> RMean(P+1);
-Info<< "\n--Creating RMean[k] field\n" << endl;
-forAll(RMean, k)
+
+/***************************************************************/
+
+// On the fly calculations of non-polynomial terms
+
+PtrList<volScalarField> L(P+1);
+Info<< "\n--Creating field L[k]\n" << endl;
+forAll(L, k)
 {
-    RMean.set(k,new volSymmTensorField
+    L.set(k,new volScalarField
     (
         IOobject
         (
-            "RMean" + std::to_string(k),
+            "L" + std::to_string(k),
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            IOobject::NO_WRITE
         ),
-        symm(U[0]*U[0])*0.0
+        2*(symm(fvc::grad(U[k])) && symm(fvc::grad(U[k])))
     ));
 }
 
-Info<< "\n--Creating UPrime2MeanSigma field UPrime2MeanSigma\n" << endl;
-volSymmTensorField RMeanSigma
-(
-    IOobject
+PtrList<volScalarField> S(P+1);
+Info<< "\n--Creating field S[k]\n" << endl;
+forAll(S, k)
+{
+    S.set(k,new volScalarField
     (
-        "RMeanSigma",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    symm(U[0]*U[0])*0.0
-);
+        IOobject
+        (
+            "S" + std::to_string(k),
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        sqrt(L[k])
+    ));
+    Info<< max(S[k]) << endl;
+
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Restart booleans for UQ
+
+bool restarted1(false);
+bool restarted2(false);
+bool perfectRestart1(false);
+bool perfectRestart2(false);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

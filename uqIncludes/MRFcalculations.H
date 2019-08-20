@@ -10,12 +10,12 @@ if (pimple.firstIter() || moveMeshOuterCorrectors)
         {
             // Calculate absolute flux
             // from the mapped surface velocity
-            phi[k] = mesh.Sf() & Uf[k]();
+            phi[P-k] = mesh.Sf() & Uf[P-k]();
 
             #include "correctPhi.H"
 
             // Make the flux relative to the mesh motion
-            fvc::makeRelative(phi[k], U[k]);
+            fvc::makeRelative(phi[P-k], U[P-k]);
         }
 
         if (checkMeshCourantNo)

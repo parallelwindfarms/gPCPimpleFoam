@@ -1,8 +1,8 @@
 CorrectPhi
 (
-    U[k],
-    phi[k],
-    p[k],
+    U[P-k],
+    phi[P-k],
+    p[P-k],
     dimensionedScalar("rAUf", dimTime, 1),
     geometricZeroField(),
     pimple

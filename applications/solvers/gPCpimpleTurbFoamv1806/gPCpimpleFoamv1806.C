@@ -95,15 +95,6 @@ int main(int argc, char *argv[])
     forAll(U, k)
         turbulence[k]->validate();
 
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-    bool restarted1(false);
-    bool perfectRestart1(false);
-    bool restarted2(false);
-    bool perfectRestart2(false);
-
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
     Info<< "\nStarting time loop\n" << endl;
 
     // --- Time loop (solving P+1 systems evey time iteration)
@@ -114,49 +105,66 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
         #include "readDyMControls.H"
+        #include "U0CourantNo.H"
         #include "setDeltaT.H"
 
-        // --- Pressure-velocity PIMPLE corrector loop
-        while (pimple.loop())
+        // --- Explicit iteration cycles b/w systems of Uk-pk
+        while (expItr < expItrMax)
         {
+            expItr++;
+
+            Info<< "expItr: cycle " << expItr << endl;
+
             // --- Loop over velocity modes
             forAll(U, k)
             {
-                  Info<< "gPC: node " << k << endl;
+                // -- Efficiently updating UQ modes
+                if(expItr <= P+1-k)
+                {
+                    Info<< "gPC: mode " << P-k << endl;
 
-                  #include "uqCourantNo.H"
+                    // --- Pressure-velocity PIMPLE corrector loop
+                    while (pimple.loop())
+                    {
+                          #include "UkCourantNo.H"
 
-                  // --- MRF calculations
-                  #include "MRFcalculations.H"
+                          // --- MRF calculations
+                          #include "MRFcalculations.H"
 
-                  // --- Momentum predictor
-                  #include "UEqn.H"
+                          // --- Momentum predictor
+                          #include "UEqn.H"
 
-                  // --- Pressure corrector loop
-                  while (pimple.correct())
-                  {
-                      #include "pEqn.H"
-                  }
+                          // --- Pressure corrector loop
+                          while (pimple.correct())
+                          {
+                              #include "pEqn.H"
+                          }
 
-                  // --- Update/Solve for turbulence
-                  if (pimple.turbCorr())
-                  {
-                      laminarTransport[k]->correct();
-                      turbulence[k]->correct();
-                  }
+                          // --- Update/Solve for turbulence
+                          if (pimple.turbCorr())
+                          {
+                              laminarTransport[P-k]->correct();
+                              //turbulence[P-k]->correct();
+                          }
 
-                  if(k<P)
-                      Info<< "------------------------------------" << endl;
-                  if(k==P)
-                      Info<< endl;
+                    } // --- End of PIMPLE loop
+
+                    if(expItr < P+1-k)
+                        Info<< "------------------------------------" << endl;
+                    if(expItr == P+1-k)
+                        Info<< endl;
+
+                }
 
             } // --- End of velocity modes loop
 
-        } // --- End of PIMPLE loop
+            #include "picardSk.H"
+            #include "uqNutCalcPS.H"
+
+        } // --- End of explicit cycles
 
         // --- Calculating the mean and st.dev. for UQ
         #include "uqPostProcess.H"
-        #include "calcRk.H"
 
         runTime.write();
         runTime.printExecutionTime(Info);

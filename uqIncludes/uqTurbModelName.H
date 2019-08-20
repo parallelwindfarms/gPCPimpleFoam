@@ -17,13 +17,36 @@ IOdictionary turbulenceProperties
 
 /****************************** Spectral Mode  *******************************/
 
-bool FS(0), PS(0);
+bool FS(0), PS1(0), PS2(0), truncated(0);
 word mode (turbulenceProperties.subDict("LES").lookup("mode"));
+word Truncated (turbulenceProperties.subDict("LES").lookup("truncated"));
 
 // Full Spectral (FS)
-if ( mode == "FS" )
-    { FS = 1; Info << "--Using Full Spectral (FS) Mode" << endl; }
+if      ( mode == "FS"  ){ FS = 1; Info << "\n--Using Full Spectral (FS) Mode\n" << endl; }
+// Pseudo Spectral (PS1)
+else if ( mode == "PS1" ){ PS1 = 1; Info << "\n--Using Pseudo Spectral (PS1) Mode\n" << endl; }
+// Pseudo Spectral (PS2)
+else if ( mode == "PS2" ){ PS2 = 1; Info << "\n--Using Pseudo Spectral (PS2) Mode\n" << endl; }
+else
+{
+    Info<< "\n--> FOAM FATAL IO ERROR:\n\n"
+        << "Invalid entry for spectral mode in constant/turbulenceProperties\n\n"
+        << "FOAM exiting\n"
+        << endl;
+    return 0;
+}
 
-// Pseudo Spectral (PS)
-if ( mode == "PS" )
-    { PS = 1; Info << "--Using Pseudo Spectral (PS) Mode" << endl; }
+
+// Truncation of higher order terms
+if ( Truncated == "on" || Truncated == "yes" || Truncated == "true" || Truncated == "1" )
+{ truncated = 1; Info << "\n--Truncation of higher order terms is on\n" << endl; }
+else if ( Truncated == "off" || Truncated == "no" || Truncated == "false" || Truncated == "0" )
+{ truncated = 0; Info << "\n--Truncation of higher order terms is off\n" << endl; }
+else
+{
+    Info<< "\n--> FOAM FATAL IO ERROR:\n\n"
+        << "Invalid entry for truncated mode in constant/turbulenceProperties\n\n"
+        << "FOAM exiting\n"
+        << endl;
+    return 0;
+}
