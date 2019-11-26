@@ -41,7 +41,6 @@ tmp<volScalarField> uqSmagorinsky<BasicTurbulenceModel>::k
     const tmp<volTensorField>& gradU
 ) const
 {
-    /* Not used for an incompressible flow */
     volSymmTensorField D(symm(gradU));
 
     volScalarField a(this->Ce_/this->delta());
@@ -67,23 +66,29 @@ tmp<volScalarField> uqSmagorinsky<BasicTurbulenceModel>::k
 template<class BasicTurbulenceModel>
 void uqSmagorinsky<BasicTurbulenceModel>::correctNut()
 {
-    /* Not need for an incompressible flow */
+    /* Not needed for incompressible flows */
     //volScalarField k(this->k(fvc::grad(this->U_)));
 
     //this->nut_ = Ck_*this->delta()*sqrt(k);
     //this->nut_.correctBoundaryConditions();
 
-    volSymmTensorField D(symm(fvc::grad(this->U_)));
+    /* Already updated in the top-level solver */
+    //volSymmTensorField D(symm(fvc::grad(this->U_)));
+    //this->nut_ = sqr(Cs_*this->delta()) * sqrt(2*(D && D));
 
-    this->nut_ = sqr(Cs_*this->delta()) * sqrt(2*(D && D));
     this->nut_.correctBoundaryConditions();
-
     fv::options::New(this->mesh_).correct(this->nut_);
-
     BasicTurbulenceModel::correctNut();
-
 }
 
+template<class BasicTurbulenceModel>
+void uqSmagorinsky<BasicTurbulenceModel>::uqCorrectNut(volScalarField uqNut)
+{
+    this->nut_ = uqNut;
+    this->nut_.correctBoundaryConditions();
+    fv::options::New(this->mesh_).correct(this->nut_);
+    BasicTurbulenceModel::correctNut();
+}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -188,6 +193,13 @@ void uqSmagorinsky<BasicTurbulenceModel>::correct()
 {
     uqLESeddyViscosity<BasicTurbulenceModel>::correct();
     correctNut();
+}
+
+template<class BasicTurbulenceModel>
+void uqSmagorinsky<BasicTurbulenceModel>::uqCorrect(volScalarField uqNut)
+{
+    uqLESeddyViscosity<BasicTurbulenceModel>::correct();
+    uqCorrectNut(uqNut);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

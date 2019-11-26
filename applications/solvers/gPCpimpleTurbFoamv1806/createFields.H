@@ -175,25 +175,26 @@ forAll(p, k)
 
 // UQ mean, st.dev. and their ModEff initialization (for postProcessing)
 
-// Sigma -> Mean -> Prime2Mean
-/*
-Info<< "\n--Creating pSigma field pSigma\n" << endl;
-
-volScalarField pSigma
-(
-    IOobject
+// Turbulent viscosity Mean, Sigma
+PtrList<volScalarField> nutMean(P+1);
+Info<< "\n--Reading field nut[k]Mean\n" << endl;
+forAll(nutMean, k)
+{
+    nutMean.set(k,new volScalarField
     (
-        "pSigma",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    p[1]*0.0
-);
+        IOobject
+        (
+            "nutMean" + std::to_string(k),
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        turbulence[k]->nut()*0.0
+    ));
+}
 
 Info<< "\n--Creating nutSigma field nutSigma\n" << endl;
-
 volScalarField nutSigma
 (
     IOobject
@@ -207,22 +208,20 @@ volScalarField nutSigma
     turbulence[1]->nut()*0.0
 );
 
-
-Info<< "\n--Creating USigma field USigma\n" << endl;
-volVectorField USigma
+Info<< "\n--Creating field nutMeanSigma\n" << endl;
+volScalarField nutMeanSigma
 (
     IOobject
     (
-        "USigma",
+        "nutMeanSigma",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
         IOobject::AUTO_WRITE
     ),
-    U[1]*0.0
+    turbulence[1]->nut()*0.0
 );
-*/
-// Mean -> Sigma, Prime2Mean -> Sigma
+// Pressure Mean, Sigma
 PtrList<volScalarField> pMean(P+1);
 Info<< "\n--Reading field p[k]Mean\n" << endl;
 forAll(pMean, k)
@@ -241,6 +240,20 @@ forAll(pMean, k)
     ));
 }
 
+Info<< "\n--Creating field pSigma\n" << endl;
+volScalarField pSigma
+(
+    IOobject
+    (
+        "pSigma",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    p[1]*0.0
+);
+
 Info<< "\n--Creating field pMeanSigma\n" << endl;
 volScalarField pMeanSigma
 (
@@ -255,6 +268,7 @@ volScalarField pMeanSigma
     p[1]*0.0
 );
 
+// Velocity Mean, Sigma
 PtrList<volVectorField> UMean(P+1);
 Info<< "\n--Reading field U[k]Mean\n" << endl;
 forAll(UMean, k)
@@ -273,6 +287,20 @@ forAll(UMean, k)
     ));
 }
 
+Info<< "\n--Creating field USigma\n" << endl;
+volVectorField USigma
+(
+    IOobject
+    (
+        "USigma",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    U[1]*0.0
+);
+
 Info<< "\n--Creating field UMeanSigma\n" << endl;
 volVectorField UMeanSigma
 (
@@ -287,6 +315,7 @@ volVectorField UMeanSigma
     U[1]*0.0
 );
 
+// Reynolds Stress Mean, Sigma
 PtrList<volSymmTensorField> RMean(P+1);
 Info<< "\n--Creating field RMean[k]\n" << endl;
 forAll(RMean, k)
@@ -305,6 +334,20 @@ forAll(RMean, k)
     ));
 }
 
+Info<< "\n--Creating field RSigma\n" << endl;
+volSymmTensorField RSigma
+(
+    IOobject
+    (
+        "RSigma",
+        runTime.timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    symm(U[1]*U[1])*0.0
+);
+
 Info<< "\n--Creating field RMeanSigma\n" << endl;
 volSymmTensorField RMeanSigma
 (
@@ -318,52 +361,6 @@ volSymmTensorField RMeanSigma
     ),
     symm(U[0]*U[0])*0.0
 );
-
-
-/*
-Info<< "\n--Creating UMeanSigmaMean field UMeanSigmaMean\n" << endl;
-volVectorField UMeanSigmaMean
-(
-    IOobject
-    (
-        "UMeanSigmaMean",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    U[1]*0.0
-);
-
-Info<< "\n--Creating UMeanSigma2 field UMeanSigma2\n" << endl;
-volSymmTensorField UMeanSigma2
-(
-    IOobject
-    (
-        "UMeanSigma2",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    symm(UMeanSigma*UMeanSigma)
-);
-
-Info<< "\n--Creating UMeanSigmaPrime2Mean field UMeanSigmaPrime2Mean\n" << endl;
-volSymmTensorField UMeanSigmaPrime2Mean
-(
-    IOobject
-    (
-        "UMeanSigmaPrime2Mean",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    symm(UMeanSigma*UMeanSigma)
-);
-*/
-
 
 /***************************************************************/
 
@@ -419,27 +416,12 @@ bool perfectRestart2(false);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// Explicit pressure gradient for periodic flows
 
+// Pressure gradient with direction and dimension
+dimensionedVector GradP(runTime.controlDict().lookup("GradP"));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
 

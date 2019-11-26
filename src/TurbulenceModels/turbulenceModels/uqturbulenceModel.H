@@ -229,7 +229,7 @@ public:
         virtual word getModelName() = 0;
 
         //- Set uqNut
-        virtual void setNut(volScalarField uqNut) = 0;
+        virtual void uqCorrect(volScalarField uqNut);
 
 };
 

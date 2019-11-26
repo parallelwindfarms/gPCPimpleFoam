@@ -179,5 +179,10 @@ void Foam::uqeddyViscosity<BasicTurbulenceModel>::correct()
     BasicTurbulenceModel::correct();
 }
 
+template<class BasicTurbulenceModel>
+void Foam::uqeddyViscosity<BasicTurbulenceModel>::uqCorrect(volScalarField uqNut)
+{
+    BasicTurbulenceModel::correct();
+}
 
 // ************************************************************************* //

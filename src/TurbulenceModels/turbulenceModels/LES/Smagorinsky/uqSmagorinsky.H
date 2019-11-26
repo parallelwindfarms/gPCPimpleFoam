@@ -117,6 +117,8 @@ protected:
         //- Update the SGS eddy viscosity
         virtual void correctNut();
 
+        //- Update the uqSGS eddy viscosity
+        virtual void uqCorrectNut(volScalarField uqNut);
 
 public:
 
@@ -175,8 +177,8 @@ public:
         //- Return model name
         virtual word getModelName(){ return this->typeName_(); }
 
-        //- Set uqNut
-        virtual void setNut(volScalarField uqNut) { this->nut_ = uqNut; }
+        //- Correct UQ Eddy-Viscosity and related properties
+        virtual void uqCorrect(volScalarField uqNut);
 };
 
 

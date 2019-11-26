@@ -35,7 +35,7 @@ Description
 {
     scalarField sumPhi =
     (
-        fvc::surfaceSum(mag(phi[P-k]))().primitiveField()
+        fvc::surfaceSum(mag(phi[k]))().primitiveField()
     );
 
     CoNum = 0.5*gMax(sumPhi/mesh.V().field())*runTime.deltaTValue();
@@ -44,7 +44,7 @@ Description
         0.5*(gSum(sumPhi)/gSum(mesh.V().field()))*runTime.deltaTValue();
 }
 
-Info<< "U" << P-k << " based Courant Number mean: " << meanCoNum
+Info<< "U" << k << " based Courant Number mean: " << meanCoNum
     << " max: " << CoNum << endl;
 
 // ************************************************************************* //

@@ -23,7 +23,7 @@ if (time > restartAvgTime)
    restarted2 = true;
 }
 
-/******************* pMean, UMean, UMeanSigma, UMeanSigmaMean  *************************/
+/********************** nut, p, U - Mean, Sigma, MeanSigma **********************/
 
 if ((time-restartAvgTime >= 0) && (restarted1 == true))
 {
@@ -42,39 +42,56 @@ if ((time-restartAvgTime >= 0) && (restarted1 == false))
 
 forAll(UMean, k)
 {
-    pMean[k] = (1-beta)*pMean[k] + beta*p[k];
-    UMean[k] = (1-beta)*UMean[k] + beta*U[k];
+    nutMean[k]  = (1-beta)*nutMean[k] + beta*turbulence[k]->nut();
+    pMean[k]    = (1-beta)*pMean[k]   + beta*p[k];
+    UMean[k]    = (1-beta)*UMean[k]   + beta*U[k];
 }
 
-volScalarField      tmppMeanSigma(0.0*sqr(pMean[0]));
-volVectorField      tmpUMeanSigma(0.0*cmptMultiply(UMean[0], UMean[0]));
+volScalarField      tmpnutVar     (0.0*sqr(turbulence[0]->nut()));
+volScalarField      tmppVar       (0.0*sqr(p[0]));
+volVectorField      tmpUVar       (0.0*cmptMultiply(U[0], U[0]));
+volScalarField      tmpnutMeanVar (0.0*sqr(nutMean[0]));
+volScalarField      tmppMeanVar   (0.0*sqr(pMean[0]));
+volVectorField      tmpUMeanVar   (0.0*cmptMultiply(UMean[0], UMean[0]));
+
 forAll(U, k)
 {
     if ( k > 0 )
     {
-        tmppMeanSigma += M1[k] * sqr(pMean[k]);
-        tmpUMeanSigma += M1[k] * cmptMultiply(UMean[k], UMean[k]);
+        tmpnutVar       += M1[k] * sqr(turbulence[k]->nut());
+        tmppVar         += M1[k] * sqr(p[k]);
+        tmpUVar         += M1[k] * cmptMultiply(U[k], U[k]);
+        tmpnutMeanVar   += M1[k] * sqr(nutMean[k]);
+        tmppMeanVar     += M1[k] * sqr(pMean[k]);
+        tmpUMeanVar     += M1[k] * cmptMultiply(UMean[k], UMean[k]);
     }
 }
 
-pMeanSigma = sqrt(tmppMeanSigma);
+nutSigma     = sqrt(tmpnutVar);
+nutMeanSigma = sqrt(tmpnutMeanVar);
+
+pSigma       = sqrt(tmppVar);
+pMeanSigma   = sqrt(tmppMeanVar);
+
 for (label dir=0; dir<3; dir++)
-    UMeanSigma.replace(dir, sqrt(tmpUMeanSigma.component(dir)));
+{
+    USigma.replace(dir, sqrt(tmpUVar.component(dir)));
+    UMeanSigma.replace(dir, sqrt(tmpUMeanVar.component(dir)));
+}
 
-//UMeanSigmaMean = (1-beta)*UMeanSigmaMean + beta*UMeanSigma;
-
-/********************************** RMean ***************************************/
+/*************************** R - Mean, Sigma, MeanSigma *************************/
 
 if(time > dt)
 {
+
     beta = dt/(time-dt);
 
     if ((time-restartAvgTime >= 0) && (restarted2 == true))
     {
         if (perfectRestart2)
-            beta = dt/(time-dt-restartAvgTime+dt);
+            beta = dt/(time-restartAvgTime + dt*1e-3);
         else
-            beta = dt/(time-dt-restartAvgTime);
+            beta = dt/(time-dt-restartAvgTime + dt*1e-3);
     }
     if ((time-restartAvgTime >= 0) && (restarted2 == false))
     {
@@ -84,68 +101,38 @@ if(time > dt)
             perfectRestart2 = true;
     }
 
-    if (abs(beta) > 1) { beta = 1; }
+    if (abs(beta) >= 1) { beta = 1; }
 
-    volSymmTensorField  tmpRMeank(0.0*RMean[0]);
+    volSymmTensorField  tmpRk   (0.0*RMean[0]);
+    volSymmTensorField  tmpRVar (0.0*cmptMultiply(RMean[0], RMean[0]));
+
     forAll(RMean, k)
     {
-        tmpRMeank *= 0.0;
+        tmpRk *= 0.0;
 
         forAll(RMean, i)
         {
             forAll(RMean, j)
             {
-                tmpRMeank +=  M3[i][j][k] * symm((U[i]-UMean[i])*(U[j]-UMean[j]));
+                tmpRk +=  M3[i][j][k] * symm((U[i]-UMean[i])*(U[j]-UMean[j]));
             }
         }
 
-        RMean[k] = (1-beta)*RMean[k] + beta*tmpRMeank/M1[k];
+        RMean[k] = (1-beta)*RMean[k] + beta*tmpRk/M1[k];
+        if ( k > 0)
+            tmpRVar += M1[k] * cmptMultiply(tmpRk, tmpRk);
     }
+
+    for (label dir=0; dir<6; dir++)
+        RSigma.replace(dir, sqrt(tmpRVar.component(dir)));
 }
 
-/*************** RMeanSigma, UMeanSigma2, UMeanSigmaPrim2Mean *******************/
-
-volSymmTensorField  tmpRMeanSigma(0.0*cmptMultiply(RMean[0], RMean[0]));
+volSymmTensorField  tmpRMeanVar (0.0*cmptMultiply(RMean[0], RMean[0]));
 forAll(U, k)
 {
     if ( k > 0 )
-        tmpRMeanSigma += M1[k] * cmptMultiply(RMean[k], RMean[k]);
+        tmpRMeanVar += M1[k] * cmptMultiply(RMean[k], RMean[k]);
 }
+
 for (label dir=0; dir<6; dir++)
-    RMeanSigma.replace(dir, sqrt(tmpRMeanSigma.component(dir)));
-
-/*
-UMeanSigma2 = symm(UMeanSigma*UMeanSigma);
-
-if (time > dt)
-{
-    UMeanSigmaPrime2Mean = (1-beta)*UMeanSigmaPrime2Mean
-                         +  beta*symm((UMeanSigma-UMeanSigmaMean)
-                                     *(UMeanSigma-UMeanSigmaMean));
-}
-*/
-
-
-/*
-volScalarField      tmppVar       (0.0*sqr(p[0]));
-volScalarField      tmpnutVar     (0.0*sqr(turbulence[0]->nut()));
-volVectorField      tmpUVar       (0.0*cmptMultiply(U[0], U[0]));
-
-forAll(U, k)
-{
-    Ckk = M1[k];
-
-    if ( k > 0 )
-    {
-        tmppVar    += Ckk * sqr(p[k]);
-        tmpnutVar  += Ckk * sqr(turbulence[k]->nut());
-        tmpUVar    += Ckk * cmptMultiply(U[k], U[k]);
-    }
-}
-
-pSigma   = sqrt(tmppVar);
-nutSigma = sqrt(tmpnutVar);
-
-for (label dir=0; dir<3; dir++)
-    USigma.replace(dir, sqrt(tmpUVar.component(dir)));
-*/
+    RMeanSigma.replace(dir, sqrt(tmpRMeanVar.component(dir)));

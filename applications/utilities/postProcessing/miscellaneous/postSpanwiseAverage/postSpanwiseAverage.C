@@ -35,6 +35,8 @@ Description
 #include "OFstream.H"
 #include "OSspecific.H"
 
+#include <regex>
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 //  Main program:

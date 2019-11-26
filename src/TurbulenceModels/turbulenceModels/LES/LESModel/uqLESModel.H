@@ -229,8 +229,11 @@ public:
             return this->nut(patchi) + this->nu(patchi);
         }
 
-        //- Solve the turbulence equations and correct the turbulence viscosity
-        virtual void correct();
+            //- Solve the turbulence equations and correct the turbulence viscosity
+            virtual void correct();
+
+            //- Solve the uq turbulence equations and correct the turbulence viscosity
+            virtual void uqCorrect(volScalarField uqNut);
 };
 
 

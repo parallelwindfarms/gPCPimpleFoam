@@ -17,31 +17,26 @@
         //Check the type of the field
         word type = "noField";
 		
-		if	    ( fieldNames[i] == "pMean" 		|| 
-				  fieldNames[i] == "p0Mean" 		|| fieldNames[i] == "pSigmaMean" 	||
-				  fieldNames[i] == "pMean0" 		|| fieldNames[i] == "pMeanSigma" 	|| 
-				  fieldNames[i] == "yPlusMean" )
+		if	(	
+				std::regex_match (fieldNames[i], std::regex("(p)(.*)"))		||	
+				std::regex_match (fieldNames[i], std::regex("(nut)(.*)"))	||
+				std::regex_match (fieldNames[i], std::regex("(yPl)(.*)"))	
+			)
 			type = "volScalarField";
 			
-		else if ( fieldNames[i] == "UMean" 		||
-				  fieldNames[i] == "U0Mean" 	|| fieldNames[i] == "UMean0" 		|| 
-				  fieldNames[i] == "UMean1" 	|| fieldNames[i] == "UMean2"	 	||
-				  fieldNames[i] == "UMean3" 	|| fieldNames[i] == "UMean4"	 	||
-				  fieldNames[i] == "UMean5" 	|| fieldNames[i] == "UMean6"	 	||
-				  fieldNames[i] == "USigmaMean" || fieldNames[i] == "UMeanSigma" 	|| 
-				  fieldNames[i] == "UMeanSigmaMean" )
-			type = "volVectorField";
-			
-		else if ( fieldNames[i] == "UPrime2Mean" 		||
-				  fieldNames[i] == "U0Prime2Mean" 		|| fieldNames[i] == "USigmaPrime2Mean" 			|| 
-				  fieldNames[i] == "RMean0" 			|| fieldNames[i] == "RMeanSigma" 				||
-				  fieldNames[i] == "RMean1" 			|| fieldNames[i] == "RMean2" 					||
-				  fieldNames[i] == "RMean3" 			|| fieldNames[i] == "RMean4" 					||
-				  fieldNames[i] == "RMean5" 			|| fieldNames[i] == "RMean6" 					||
-				  fieldNames[i] == "UMeanSigma2" 		|| fieldNames[i] == "UMeanSigmaPrime2Mean"		||
-			      fieldNames[i] == "RdevPlusModEffMean" || fieldNames[i] == "RdevPlusModEffSigmaMean" 	)
+		else if	
+			(	
+				std::regex_match (fieldNames[i], std::regex("(UPrime)(.*)"))		||	
+				std::regex_match (fieldNames[i], std::regex("(U0Prime)(.*)"))	||
+				std::regex_match (fieldNames[i], std::regex("(R)(.*)"))	
+			)
 			type = "volSymmTensorField";
-	
+			
+		else if 
+			(	
+				std::regex_match (fieldNames[i], std::regex("(U)(.*)"))
+			)
+			type = "volVectorField";
 	
 		// Averaging fields
 		

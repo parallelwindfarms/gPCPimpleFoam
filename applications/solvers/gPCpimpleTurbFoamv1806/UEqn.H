@@ -1,10 +1,10 @@
 // --- Solve the Momentum equation
 
-Ckk = M1[P-k];
+Ckk = M1[k];
 
-MRF.correctBoundaryVelocity(U[P-k]);
+MRF.correctBoundaryVelocity(U[k]);
 
-fvVectorMatrix UEqn (Ckk * fvm::ddt(U[P-k]));
+fvVectorMatrix UEqn (Ckk * fvm::ddt(U[k]));
 
 if ( FS )
 {
@@ -12,24 +12,36 @@ if ( FS )
     {
         forAll(U, i)
         {
-            if ( (truncated && (i+j+P-k <= 2*P)) || (truncated != 1) )
+            if ( (truncated && (i+j+k <= 2*P)) || (truncated != 1) )
             {
-                Cijk = M3[i][j][P-k];
+                Cijk = M3[k][j][i];
 
-                if ( Cijk != 0 )
+                if ( Cijk != 0.0 )
                 {
-                    if ( j==(P-k) ) { UEqn += Cijk * fvm::div(phi[i], U[j]); }
-                    else            { UEqn += Cijk * fvc::div(phi[i], U[j]); }
+                    if ( j==k )
+                        { UEqn += Cijk * fvm::div(phi[i], U[j]); }
+                    //else if ( j!=k && i==k )
+                    //    { UEqn += Cijk * fvm::div(phi[j], U[i]); } // fvm -> Sp. Convg.
+                    else
+                        { UEqn += Cijk * fvc::div(phi[i], U[j]); }
                 }
             }
             else { Cijk = 0.0; }
 
-            #include "uqNutCalc.H"
+            #include "uqNut_FS.H"
 
-            if ( j==(P-k) ) { UEqn -= fvm::laplacian(uqNut_i+Cijk*turbulence[i]->nu(), U[j]); }
-            else            { UEqn -= fvc::laplacian(uqNut_i+Cijk*turbulence[i]->nu(), U[j]); }
+            /*/volScalarField uqNut (uqNut_FS+turbulence[i]->nu());
+            volScalarField uqNut (uqNut_FS);
+            Info<< "kji " << k << j << i << "\tuqNut_i"
+                << "\tavg "   << uqNut.internalField().weightedAverage(mesh.V()).value()
+                << "\tmax " << max(uqNut.internalField()).value()
+                << "\tmin " << min(uqNut.internalField()).value()
+                << endl;//*/
 
-            UEqn -= fvc::div((uqNut_i+Cijk*turbulence[i]->nu())*dev2(T(fvc::grad(U[j]))));
+            if ( j==k ) { UEqn -= fvm::laplacian(uqNut_FS+Cijk*turbulence[i]->nu(), U[j]); }
+            else        { UEqn -= fvc::laplacian(uqNut_FS+Cijk*turbulence[i]->nu(), U[j]); }
+
+            UEqn -= fvc::div((uqNut_FS+Cijk*turbulence[i]->nu())*dev2(T(fvc::grad(U[j]))));
         }
     }
 }
@@ -40,17 +52,22 @@ else if ( PS1 || PS2 )
     {
         forAll(U, i)
         {
-            if ( (truncated && (i+j+P-k <= 2*P)) || (truncated != 1) )
+            if ( (truncated && (i+j+k <= 2*P)) || (truncated != 1) )
             {
-                Cijk = M3[i][j][P-k];
+                Cijk = M3[k][j][i];
 
-                if ( Cijk != 0 )
+                if ( Cijk != 0.0 )
                 {
-                    if ( j==(P-k) )
+                    if ( j==k )
                     {
                         UEqn += Cijk * fvm::div(phi[i], U[j]);
                         UEqn -= Cijk * fvm::laplacian(turbulence[i]->nuEff(), U[j]);
                     }
+                    /*else if ( j!=k && i==k )
+                    {
+                        UEqn += Cijk * fvm::div(phi[j], U[i]); // fvm -> Sp. Convg.
+                        UEqn -= Cijk * fvc::laplacian(turbulence[i]->nuEff(), U[j]);
+                    }*/
                     else
                     {
                         UEqn += Cijk * fvc::div(phi[i], U[j]);
@@ -58,14 +75,26 @@ else if ( PS1 || PS2 )
                     }
 
                     UEqn -= Cijk * fvc::div((turbulence[i]->nuEff())*dev2(T(fvc::grad(U[j]))));
+
+                    /*/volScalarField uqNut (turbulence[i]->nuEff());
+                    volScalarField uqNut (turbulence[i]->nut());
+                    Info<< "kji " << k << j << i << "\tuqNut_i"
+                        << "\tavg "<< uqNut.weightedAverage(mesh.V()).value()
+                        << "\tmax " << max(uqNut).value()
+                        << "\tmin " << min(uqNut).value()
+                        << endl;//*/
                 }
             }
         }
     }
 }
 
-UEqn += MRF.DDt(U[P-k]);
-UEqn == fvOptions(U[P-k]);
+UEqn += MRF.DDt(U[k]);
+
+// Explicit pressure forcing for periodicity
+if ( k==0 ){ UEqn += Ckk*GradP; }
+
+UEqn == fvOptions(U[k]);
 
 UEqn *= 1.0/Ckk;
 
@@ -75,7 +104,7 @@ fvOptions.constrain(UEqn);
 
 if (pimple.momentumPredictor())
 {
-    solve(UEqn == - fvc::grad(p[P-k]));
+    solve(UEqn == - fvc::grad(p[k]));
 
-    fvOptions.correct(U[P-k]);
+    fvOptions.correct(U[k]);
 }

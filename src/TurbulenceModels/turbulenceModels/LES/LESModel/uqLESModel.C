@@ -206,5 +206,11 @@ void Foam::uqLESModel<BasicTurbulenceModel>::correct()
     BasicTurbulenceModel::correct();
 }
 
+template<class BasicTurbulenceModel>
+void Foam::uqLESModel<BasicTurbulenceModel>::uqCorrect(volScalarField uqNut)
+{
+    delta_().correct();
+    BasicTurbulenceModel::correct();
+}
 
 // ************************************************************************* //

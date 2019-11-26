@@ -138,6 +138,9 @@ public:
 
         //- Solve the turbulence equations and correct the turbulence viscosity
         virtual void correct() = 0;
+
+        //- Solve the uq turbulence equations and correct the turbulence viscosity
+        virtual void uqCorrect(volScalarField uqNut) = 0;
 };
 
 

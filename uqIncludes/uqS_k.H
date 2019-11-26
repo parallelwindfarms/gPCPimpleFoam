@@ -1,16 +1,27 @@
 // Setting number of Picard Iteration
-label picItr(0);
-label picItrMax(runTime.controlDict().lookupOrDefault<label>("picItrMax",10));
+label  picItr(0);
+label  picItrMax(runTime.controlDict().lookupOrDefault<label>("picItrMax",100));
+scalar relax_Sk(runTime.controlDict().lookupOrDefault<scalar>("relax_Sk",1.0));
+scalar scale_Sk(runTime.controlDict().lookupOrDefault<scalar>("scale_Sk",1.0));
 
-// Initialsing Sk using Uk
-forAll(S, k)
-{
-    L[k] = 2*(symm(fvc::grad(U[k])) && symm(fvc::grad(U[k])));
-    S[k] = sqrt(L[k]);
-    Info<< "mean " << S[k].weightedAverage(mesh.V()) << "\t" << max(S[k]) << endl;
-}
+// Initialsing Lk and Sk using Uk
+//if (runTime.value() == runTime.deltaT().value())
+//{
+        forAll(S, k)
+        {
+            L[k] = 2*(symm(fvc::grad(U[k])) && symm(fvc::grad(U[k])));
+            S[k] = sqrt(L[k]);
+            if ( k>0 ) S[k] = S[k] * pow(scale_Sk,k);
+            Info<< "|S|"    << k
+                << "\tavg " << S[k].internalField().weightedAverage(mesh.V()).value()
+                << "\tmax " << max(S[k].internalField()).value()
+                << "\tmin " << min(S[k].internalField()).value()
+                << endl;
+        }
+//}
 
 
+// Need some fixing or a new method
 if(picItrMax != 0)
 {
     // Estimating Lk using Ui and Uj
@@ -28,6 +39,7 @@ if(picItrMax != 0)
             }
         }
         L[k] = 2*L[k]/Ckk;
+        //L[k] = mag(L[k]);
         //Info<< max(L[k]) << endl;
     }
 
@@ -50,13 +62,13 @@ if(picItrMax != 0)
 
     picItr = 1;
     dimensionedScalar deltaPicTol("deltaPicTol", dimless, 1e-03);
-    dimensionedScalar deltaPicSk("deltaPicSk", pow(dimTime,-1), 1.0);
+    dimensionedScalar Sk_prev("Sk_prev", pow(dimTime,-1), 0.0);
     dimensionedScalar deltaPicSkRel("deltaPicSk", dimless, 1.0);
-
+    scalar r = relax_Sk;
 
     while( (picItr <= picItrMax) && (deltaPicSkRel > deltaPicTol) )
     {
-        deltaPicSk = S[0].weightedAverage(mesh.V());
+        Sk_prev = S[0].weightedAverage(mesh.V());
         forAll(S, k)
         {
             Ckk  = M1[k];
@@ -79,21 +91,29 @@ if(picItrMax != 0)
                     denominator += 2.0*S[i]*M3[i][k][k];
                 }
             }
-            S[k] = (L[k]*Ckk - numerator)/(S[k]*M3[k][k][k] + denominator + SMALL*unitDenom);
+            S[k] = (1-r)*S[k] + r*(L[k]*Ckk - numerator)/(S[k]*M3[k][k][k] + denominator + SMALL*unitDenom);
+            //S[k] = (-denominator+sqrt(sqr(denominator)+4*M3[k][k][k]*(L[k]*Ckk-numerator)))/(2*M3[k][k][k]);
+            //S[k] = sqrt((L[k]*Ckk - numerator - denominator*S[k])/(M3[k][k][k]+SMALL));
+            //S[k] = (S[k] + mag(S[k]))/2.0;
         }
 
-        deltaPicSkRel = mag(S[0].weightedAverage(mesh.V()) - deltaPicSk) / mag(deltaPicSk);
+        deltaPicSkRel = mag(S[0].weightedAverage(mesh.V()) - Sk_prev) / mag(Sk_prev);
         if( (picItr == picItrMax) || (deltaPicSkRel < deltaPicTol))
         {
+            Info<< "\nMax Picard iterations used : " << picItr << endl;
+
             forAll(S, k)
             {
-                S[k] = (S[k] + mag(S[k]))/2.0;
-                Info<< "mean " << S[k].weightedAverage(mesh.V()) << "\t" << max(S[k]) << endl;
+                Info<< "mean " << S[k].weightedAverage(mesh.V())
+                    << "\t" << max(S[k])
+                    << "\t" << min(S[k])
+                    << endl;
             }
-            Info<< "\nMax Picard iterations used : " << picItr << endl;
         }
         picItr++;
     }
 }
 
 Info << endl;
+
+

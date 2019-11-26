@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     {
         runTime++;
 
-        Info<< "Time = " << runTime.timeName() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << endl;
 
         #include "readDyMControls.H"
         #include "U0CourantNo.H"
@@ -113,15 +113,15 @@ int main(int argc, char *argv[])
         {
             expItr++;
 
-            Info<< "expItr: cycle " << expItr << endl;
+            Info<< nl << "expItr: cycle " << expItr << endl;
 
-            // --- Loop over velocity modes
-            forAll(U, k)
+            // --- Loop over velocity modes (reverse)
+            forAllReverse(U, k)
             {
-                // -- Efficiently updating UQ modes
-                if(expItr <= P+1-k)
+                // --- Efficiently updating UQ modes
+                if(expItrMax-expItr >= (P-k) || expItr <= k+1)
                 {
-                    Info<< "gPC: mode " << P-k << endl;
+                    Info<< "gPC: mode " << k << endl;
 
                     // --- Pressure-velocity PIMPLE corrector loop
                     while (pimple.loop())
@@ -143,25 +143,23 @@ int main(int argc, char *argv[])
                           // --- Update/Solve for turbulence
                           if (pimple.turbCorr())
                           {
-                              laminarTransport[P-k]->correct();
-                              //turbulence[P-k]->correct();
+                              laminarTransport[k]->correct();
+                              //turbulence[k]->correct();
                           }
 
                     } // --- End of PIMPLE loop
 
-                    if(expItr < P+1-k)
-                        Info<< "------------------------------------" << endl;
-                    if(expItr == P+1-k)
-                        Info<< endl;
+                    Info<< "------------------------------------" << endl;
 
                 }
 
             } // --- End of velocity modes loop
 
-            #include "picardSk.H"
-            #include "uqNutCalcPS.H"
+            #include "uqS_k.H"                          // Need some fixing
+            #include "uqNut_k.H"
 
         } // --- End of explicit cycles
+
 
         // --- Calculating the mean and st.dev. for UQ
         #include "uqPostProcess.H"

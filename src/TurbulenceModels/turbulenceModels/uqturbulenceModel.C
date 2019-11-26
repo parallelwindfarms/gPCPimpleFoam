@@ -126,5 +126,12 @@ void Foam::uqturbulenceModel::correct()
     }
 }
 
+void Foam::uqturbulenceModel::uqCorrect(volScalarField uqNut)
+{
+    if (mesh_.changing())
+    {
+        y_.correct();
+    }
+}
 
 // ************************************************************************* //
