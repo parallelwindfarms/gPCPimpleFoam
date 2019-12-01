@@ -17,7 +17,7 @@ IOdictionary turbulenceProperties
 
 /****************************** Spectral Mode  *******************************/
 
-bool FS(0), PS1(0), PS2(0), truncated(0);
+bool FS(0), PS1(0), PS2(0), truncated(0), FS_modelForm(0);
 word mode (turbulenceProperties.subDict("LES").lookup("mode"));
 word Truncated (turbulenceProperties.subDict("LES").lookup("truncated"));
 
@@ -27,6 +27,8 @@ if      ( mode == "FS"  ){ FS = 1; Info << "\n--Using Full Spectral (FS) Mode\n"
 else if ( mode == "PS1" ){ PS1 = 1; Info << "\n--Using Pseudo Spectral (PS1) Mode\n" << endl; }
 // Pseudo Spectral (PS2)
 else if ( mode == "PS2" ){ PS2 = 1; Info << "\n--Using Pseudo Spectral (PS2) Mode\n" << endl; }
+// Full Spectral (FS) Model Form
+else if ( mode == "FS_modelForm" ){ FS_modelForm = 1; Info << "\n--Using Full Spectral (FS) Model Form Mode\n" << endl; }
 else
 {
     Info<< "\n--> FOAM FATAL IO ERROR:\n\n"

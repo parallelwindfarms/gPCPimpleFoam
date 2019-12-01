@@ -3,10 +3,6 @@
 !**/Make/files
 !**/Make/options
 
-# Extra modules
-excludedModels
-uqBkp
-
 # QTcreator (IDE) related
 *.config
 *.creator
@@ -23,10 +19,17 @@ lnInclude
 # Tmp files
 .*.swp
 
-# Keep untracked
+# Keep untracked uqSolvers
 gPCpimpleTurbFoam
 gPCpimpleTurbFoamv1806_UQnut
+
+# Keep untracked detSolvers
 pimpleTurbFoamv1806
+simpleFoamWithFixedNut
+
+# Extra modules
+excludedModels
+uqBkp
 funcObj
 platforms
 swak4Foam

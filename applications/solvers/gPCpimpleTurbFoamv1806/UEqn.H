@@ -33,9 +33,9 @@ if ( FS )
             /*/volScalarField uqNut (uqNut_FS+turbulence[i]->nu());
             volScalarField uqNut (uqNut_FS);
             Info<< "kji " << k << j << i << "\tuqNut_i"
-                << "\tavg "   << uqNut.internalField().weightedAverage(mesh.V()).value()
-                << "\tmax " << max(uqNut.internalField()).value()
-                << "\tmin " << min(uqNut.internalField()).value()
+                << "\tavg "   << uqNut.weightedAverage(mesh.V()).value()
+                << "\tmax " << max(uqNut).value()
+                << "\tmin " << min(uqNut).value()
                 << endl;//*/
 
             if ( j==k ) { UEqn -= fvm::laplacian(uqNut_FS+Cijk*turbulence[i]->nu(), U[j]); }

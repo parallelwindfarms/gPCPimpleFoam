@@ -150,9 +150,13 @@ volScalarField uqNu_0(turbulence[0]->nu());
 /*
 forAll(turbulence, k)
   {
-    //Info<< "nu" << k << "\n" << laminarTransport[k]->nu() << endl;
-    //Info<< "nut" << k << "\n" << turbulence[k]->nut() << endl;
-    //Info<< "nuEff" << k << "\n" << turbulence[k]->nuEff() << endl;
+    Info<< "nu" << k << "\n" << turbulence[k]->nu() << endl;
+    volScalarField uqNut (turbulence[k]->nuEff());
+    Info<< "nuEff_" << k
+        << "\tavg " << uqNut.weightedAverage(mesh.V()).value()
+        << "\tmax " << max(uqNut).value()
+        << "\tmin " << min(uqNut).value()
+        << endl;
     //Info<< turbulence[k]->getCs() << endl;
   }
 Info<< endl;
@@ -168,9 +172,10 @@ forAll(p, k)
         p[k]    = pow(sd, k+1) * p[0];
         U[k]    = pow(sd, k+1) * U[0];
         phi[k]  = pow(sd, k+1) * phi[0];
+        turbulence[k]->uqCorrect(pow(sd, k+1) * turbulence[k]->nut());
     }
 }
-*/
+//*/
 /*********************************************************************/
 
 // UQ mean, st.dev. and their ModEff initialization (for postProcessing)
